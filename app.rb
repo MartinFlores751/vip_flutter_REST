@@ -39,18 +39,27 @@ post "/register_user" do
         u = User.new
         u.name = params[:name]
         u.user_name = params[:user]
-        u.helper = params[:helper] == 't' ? true : false
+        u.helper = params[:helper] == '1' ? true : false
         u.password = params[:password]
         u.save
-        return "Account Created\n"
+        return "Account Created!"
       end
+      return "Passwords dont match!"
     end
+    return "Username already exists!"
   end
-  "OOF\n"
+  return "Field(s) Empty"
 end
 
 post "/authenticate_user" do
-  "NO"
+  u = User.first(user_name: params[:user])
+  if u
+    if u.password == params[:password]
+      return "Log in Successful"
+    end
+    return "Incorrect Password"
+  end
+  return "Account does not Exist"
 end
 
 get "/get_helpers" do
