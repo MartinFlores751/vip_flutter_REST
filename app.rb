@@ -5,6 +5,8 @@ require 'sinatra'
 require 'data_mapper'
 require_relative 'user.rb'
 
+enable :sessions
+
 # ------------------------
 # IGNORE | Database Config
 # ------------------------
@@ -76,4 +78,53 @@ end
 
 get "/api/request_VIP" do
   "NO"
+end
+
+# ----------------
+# Web Admin Stuffs
+# ----------------
+
+get "/" do
+  erb :login
+end
+
+get "/logout" do
+  session[:user_name] = nil
+  redirect "/"
+end
+
+post "/auth" do
+  if params[:user] && params[:password]
+    user = User.first(user_name: params[:user])
+    if user && user.login(params[:password]) && user.administrator
+      session[:user_name] = user.user_name
+      redirect "/dashboard"
+    else
+      redirect "/"
+    end
+  end
+end
+
+get "/dashboard" do
+  authenticate!
+  erb :dashboard
+end
+
+# ----------------
+# Helper Functions
+# ----------------
+
+def current_user
+	if(session[:user_name])
+		@u ||= User.first(user_name: session[:user_name])
+		return @u
+	else
+		return nil
+	end
+end
+
+def authenticate!
+	if !current_user || !current_user.administrator
+		redirect "/"
+	end
 end
