@@ -29,10 +29,10 @@ if User.all(administrator: true).count == 0
   u.save
 end
 
-# ----------------
-# Request Handlers
-# ----------------
-post "/register_user" do
+# -------------
+# REST Handlers
+# -------------
+post "/api/register_user" do
   if params[:name] && params[:user] && params[:helper] && params[:password] && params[:c_password]
     if User.all(user_name: params[:user]).count == 0
       if params[:password] == params[:c_password]
@@ -51,7 +51,7 @@ post "/register_user" do
   return "Field(s) Empty"
 end
 
-post "/authenticate_user" do
+post "/api/authenticate_user" do
   u = User.first(user_name: params[:user])
   if u
     if u.password == params[:password]
@@ -62,18 +62,18 @@ post "/authenticate_user" do
   return "Account does not Exist"
 end
 
-get "/get_helpers" do
+get "/api/get_helpers" do
   "NO"
 end
 
-get "/get_VIP" do
+get "/api/get_VIP" do
   "NO"
 end
 
-get "/request_helper" do
+get "/api/request_helper" do
   "NO"
 end
 
-get "/request_VIP" do
+get "/api/request_VIP" do
   "NO"
 end
