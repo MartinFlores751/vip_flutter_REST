@@ -3,7 +3,10 @@
 # ---------------------------
 require 'sinatra'
 require 'data_mapper'
+require 'securerandom'
 require_relative 'user.rb'
+require_relative 'tokens.rb'
+require_relative 'layers.rb'
 
 enable :sessions
 
@@ -18,6 +21,11 @@ end
 
 DataMapper.finalize
 User.auto_upgrade!
+Tokens.auto_upgrade!
+Layer_1.auto_upgrade!
+Layer_2.auto_upgrade!
+Layer_3.auto_upgrade!
+
 
 # ----------------------
 # Create admin for later
