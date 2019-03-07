@@ -61,14 +61,35 @@ post "/api/register_user" do
 end
 
 post "/api/authenticate_user" do
-  u = User.first(user_name: params[:user])
-  if u
-    if u.password == params[:password]
-      return "Log in Successful"
+  if params[:user] && params[:UUID]
+    u = User.first(user_name: params[:user])
+    if u
+      if u.password == params[:password]
+        tokens = Tokens.get(:user_id => u.id, :UUID => params[:UUID])
+
+        tokens.each do |t|
+          if t.UUID == params[:UUID] && !t.isExpired
+            return t.user_key
+          else
+            t.destroy
+          end
+        end
+
+        now = Time.now
+        t = Tokens.create(
+          :user_id => u.id,
+          :created_at => now,
+          :expires => now + 86400,                                          # Token expires in ~ 1 Day (Int is in seconds!)
+          :user_key => SecureRandom.urlsafe_base64,
+          :UUID => params[:UUID]
+        )
+
+        return 
+      end
+      return "Incorrect Password"
     end
-    return "Incorrect Password"
+    return "Account does not Exist"
   end
-  return "Account does not Exist"
 end
 
 get "/api/get_helpers" do
