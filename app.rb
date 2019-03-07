@@ -26,7 +26,6 @@ Layer_1.auto_upgrade!
 Layer_2.auto_upgrade!
 Layer_3.auto_upgrade!
 
-
 # ----------------------
 # Create admin for later
 # ----------------------
@@ -91,7 +90,6 @@ end
 # ----------------
 # Web Admin Stuffs
 # ----------------
-
 get "/" do
   erb :login
 end
@@ -121,7 +119,6 @@ end
 # ----------------
 # Helper Functions
 # ----------------
-
 def current_user
 	if(session[:user_name])
 		@u ||= User.first(user_name: session[:user_name])
