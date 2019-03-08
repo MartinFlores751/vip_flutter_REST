@@ -84,7 +84,7 @@ post "/api/authenticate_user" do
           :UUID => params[:UUID]
         )
 
-        return 
+        return t.user_key
       end
       return "Incorrect Password"
     end
