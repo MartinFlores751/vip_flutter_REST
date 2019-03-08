@@ -65,13 +65,15 @@ post "/api/authenticate_user" do
     u = User.first(user_name: params[:user])
     if u
       if u.password == params[:password]
-        tokens = Tokens.get(:user_id => u.id, :UUID => params[:UUID])
+        tokens = Tokens.get(:user_id => u.id)
 
-        tokens.each do |t|
-          if t.UUID == params[:UUID] && !t.isExpired
-            return t.user_key
-          else
-            t.destroy
+        if tokens != nil
+          tokens.each do |t|
+            if t.UUID == params[:UUID] && !t.isExpired
+              return t.user_key
+            else
+              t.destroy
+            end
           end
         end
 
