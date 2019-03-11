@@ -30,12 +30,11 @@ Layer_3.auto_upgrade!
 # Create admin for later
 # ----------------------
 if User.all(administrator: true).count == 0
-  u = User.new
-  u.name = "cool-group"
-  u.user_name = "admax"
-  u.password = "admin"
-  u.administrator = true
-  u.save
+  User.create(
+  :name = "cool-group"
+  :user_name = "admax"
+  :password = "admin"
+  :administrator = true)
 end
 
 # -------------
@@ -59,8 +58,7 @@ post "/api/register_user" do
             :expires => now + 86400,                                          # Token expires in ~ 1 Day (Int is in seconds!)
             :user_key => SecureRandom.urlsafe_base64,
             :UUID => params[:UUID],
-            :last_request => now
-          ) 
+            :last_request => now) 
 
         response[:success] = true
         response[:token] = t.user_key
