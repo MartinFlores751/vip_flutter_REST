@@ -102,7 +102,12 @@ get "/api/get_helpers" do
 end
 
 get "/api/get_VIP" do
-  "NO"
+  u_js = []
+  users = User.all(:helper => false)
+  users.each do |u|
+    u_js.push(u.user_name)
+  end
+  return u_js.to_json
 end
 
 get "/api/request_helper" do
