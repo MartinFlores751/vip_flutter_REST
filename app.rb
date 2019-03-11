@@ -81,7 +81,8 @@ post "/api/authenticate_user" do
           :created_at => now,
           :expires => now + 86400,                                          # Token expires in ~ 1 Day (Int is in seconds!)
           :user_key => SecureRandom.urlsafe_base64,
-          :UUID => params[:UUID]
+          :UUID => params[:UUID],
+          :last_request => now
         )
 
         return t.user_key
