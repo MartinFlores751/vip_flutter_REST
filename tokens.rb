@@ -10,8 +10,6 @@ class Tokens
     
     def isExpired()
         now = Time.now
-        print now
-        print self.expires.to_time
         return now > self.expires.to_time
     end
 end
