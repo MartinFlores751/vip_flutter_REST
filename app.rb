@@ -42,25 +42,42 @@ end
 # REST Handlers
 # -------------
 post "/api/register_user" do
-  if params[:name] && params[:user] && params[:helper] && params[:password] && params[:c_password]
+  response = {:success => false, :error => '', :token => ''}
+  if params[:name] && params[:user] && params[:helper] && params[:password] && params[:c_password] && params[:UUID]
     if User.all(user_name: params[:user]).count == 0
       if params[:password] == params[:c_password]
-        u = User.new
-        u.name = params[:name]
-        u.user_name = params[:user]
-        u.helper = params[:helper] == '1' ? true : false
-        u.password = params[:password]
-        u.save
-        return "Account Created!"
+        u = User.create(
+            :name => params[:name],
+            :user_name => params[:user],
+            :helper => params[:helper] == '1' ? true : false,
+            :password => params[:password])
+
+        now = Time.now
+        t = Tokens.create(
+            :user_id => u.id,
+            :created_at => now,
+            :expires => now + 86400,                                          # Token expires in ~ 1 Day (Int is in seconds!)
+            :user_key => SecureRandom.urlsafe_base64,
+            :UUID => params[:UUID],
+            :last_request => now
+          ) 
+
+        response[:success] = true
+        response[:token] = t.user_key
+        return response.to_json
       end
-      return "Passwords dont match!"
+      response[:error] = "Passwords dont match!"
+      return response.to_json
     end
-    return "Username already exists!"
+    response[:error] = "Username already exists!"
+    return response.to_json
   end
-  return "Field(s) Empty"
+  response[:error] = "Field(s) Empty"
+  return response.to_json
 end
 
 post "/api/authenticate_user" do
+  response = {:success => false, :token => '', :error => '', :isHelper => ''}
   if params[:user] && params[:UUID]
     u = User.first(user_name: params[:user])
     if u
@@ -84,12 +101,16 @@ post "/api/authenticate_user" do
           :UUID => params[:UUID],
           :last_request => now
         )
-
-        return t.user_key
+        response[:success] = true
+        response[:token] = t.user_key
+        response[:isHelper] = u.helper
+        return response.to_json
       end
-      return "Incorrect Password"
+      response[:error] = "Incorrect Password"
+      return response.to_json
     end
-    return "Account does not Exist"
+    response[:error] = "Account does not Exist"
+    return response.to_json
   end
 end
 
