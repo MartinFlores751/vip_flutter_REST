@@ -113,21 +113,35 @@ post "/api/authenticate_user" do
 end
 
 get "/api/get_helpers" do
-  u_js = []
-  users = User.all(:helper => true)
-  users.each do |u|
-    u_js.push(u.user_name)
+  response = {:success => false, :users => [], :error => ''}
+  if params[:token] && params[:UUID]
+    t = Token.get(params[:UUID])
+    if t && t.user_key == params[:UUID]
+      u_js = []
+      users = User.all(:helper => true)
+      users.each do |u|
+        u_js.push(u.user_name)
+      end
+      response[:users] = u_js
+      response[:success] = true
+      return response.to_json
+    end
   end
-  return u_js.to_json
+  return response.to_json
 end
 
 get "/api/get_VIP" do
-  u_js = []
-  users = User.all(:helper => false)
-  users.each do |u|
-    u_js.push(u.user_name)
+  if params[:token] && params[:UUID]
+    t = Token.get(params[:UUID])
+    if t && t.user_key == params[:UUID]
+      u_js = []
+      users = User.all(:helper => false)
+      users.each do |u|
+        u_js.push(u.user_name)
+      end
+      return u_js.to_json
+    end
   end
-  return u_js.to_json
 end
 
 get "/api/request_helper" do
