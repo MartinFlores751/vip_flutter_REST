@@ -31,9 +31,9 @@ Layer_3.auto_upgrade!
 # ----------------------
 if User.all(administrator: true).count == 0
   User.create(
-  :name => "cool-group"
-  :user_name => "admax"
-  :password => "admin"
+  :name => "cool-group",
+  :user_name => "admax",
+  :password => "admin",
   :administrator => true)
 end
 
