@@ -132,8 +132,8 @@ end
 
 get "/api/get_VIP" do
   if params[:token] && params[:UUID]
-    t = Token.get(params[:token])
-    if t && t.user_key == params[:UUID]
+    t = Token.get(params[:UUID])
+    if t && t.user_key == params[:token]
       u_js = []
       users = User.all(:helper => false)
       users.each do |u|
