@@ -116,7 +116,7 @@ get "/api/get_helpers" do
   response = {:success => false, :users => [], :error => ''}
   if params[:token] && params[:UUID]
     t = Token.get(params[:UUID])
-    if t && t.user_key == params[:UUID]
+    if t && t.user_key == params[:token]
       u_js = []
       users = User.all(:helper => true)
       users.each do |u|
@@ -132,7 +132,7 @@ end
 
 get "/api/get_VIP" do
   if params[:token] && params[:UUID]
-    t = Token.get(params[:UUID])
+    t = Token.get(params[:token])
     if t && t.user_key == params[:UUID]
       u_js = []
       users = User.all(:helper => false)
