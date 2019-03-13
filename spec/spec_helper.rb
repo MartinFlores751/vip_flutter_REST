@@ -33,4 +33,9 @@ RSpec.configure do |c|
   Layer_2.auto_upgrade!
   Layer_3.auto_upgrade!
 
+  User.destroy
+  Tokens.destroy
+  Layer_1.destroy
+  Layer_2.destroy
+  Layer_3.destroy
 end
