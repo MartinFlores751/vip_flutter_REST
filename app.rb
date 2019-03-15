@@ -126,7 +126,10 @@ get "/api/get_helpers" do
       response[:success] = true
       return response.to_json
     end
+    response[:error] = "Invalid token"
+    return response
   end
+  response[:error] = "Missing parameter(s)"
   return response.to_json
 end
 
