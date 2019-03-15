@@ -54,7 +54,10 @@ describe 'API: ' do
 
       get '/api/get_VIP', params
 
-      expect(last_response.body).to include(@vip.user_name)
+      response = last_response.body
+      print response
+
+      expect(response).to eq('["admaxinmum","cecuheco"]')
     end
 
   end
@@ -76,9 +79,11 @@ describe 'API: ' do
       params = {token: @token.user_key,
                 UUID: @token.UUID}
 
-      get '/api/get_VIP', params
+      get '/api/get_helpers', params
 
-      expect(last_response.body).to include(@helper.user_name)
+      response = last_response.body
+
+      expect(response).to eq('{"success":true,"users":["admaxin","ououtete"],"error":""}')
     end
 
   end
