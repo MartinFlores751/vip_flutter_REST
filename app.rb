@@ -51,7 +51,7 @@ post "/api/register_user" do
             :helper => params[:helper] == '1' ? true : false,
             :password => params[:password])
 
-        now = Time.now
+        now = DateTime.now
         t = Tokens.create(
             :user_id => u.id,
             :created_at => now,
@@ -90,7 +90,7 @@ post "/api/authenticate_user" do
           end
         end
 
-        now = Time.now
+        now = DateTime.now
         t = Tokens.create(
           :user_id => u.id,
           :created_at => now,

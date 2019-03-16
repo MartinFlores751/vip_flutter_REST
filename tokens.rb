@@ -10,12 +10,12 @@ class Tokens
     property :last_request, DateTime
     
     def isExpired()
-        now = Time.now
+        now = DateTime.now
         return now > self.expires.to_time
     end
 
     def isOnline()
-        now = Time.now
+        now = DateTime.now
         offline_time = self.last_request + 300
         return now > offline_time
     end
