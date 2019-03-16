@@ -55,7 +55,6 @@ describe 'API: ' do
       get '/api/get_VIP', params
 
       response = last_response.body
-      print response
 
       expect(response).to eq('["admaxinmum","cecuheco"]')
     end
