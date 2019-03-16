@@ -118,7 +118,7 @@ get "/api/get_helpers" do
     t = Tokens.get(params[:UUID])
     if t && t.user_key == params[:token]
       u_js = []
-      users = User.all(:helper => true)
+      users = User.all(:helper => true, , :administrator => false)
       users.each do |u|
         u_js.push(u.user_name)
       end
@@ -127,7 +127,7 @@ get "/api/get_helpers" do
       return response.to_json
     end
     response[:error] = "Invalid token"
-    return response
+    return response.to_json
   end
   response[:error] = "Missing parameter(s)"
   return response.to_json
@@ -138,7 +138,7 @@ get "/api/get_VIP" do
     t = Tokens.get(params[:UUID])
     if t && t.user_key == params[:token]
       u_js = []
-      users = User.all(:helper => false)
+      users = User.all(:helper => false, :administrator => false)
       users.each do |u|
         u_js.push(u.user_name)
       end
