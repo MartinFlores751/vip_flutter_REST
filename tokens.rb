@@ -11,7 +11,7 @@ class Tokens
     
     def isExpired()
         now = DateTime.now
-        return now > self.expires.to_time
+        return now > self.expires
     end
 
     def isOnline()
