@@ -113,16 +113,16 @@ post "/api/authenticate_user" do
 end
 
 get "/api/get_helpers" do
-  response = {:success => false, :users => [], :error => ''}
+  response = {:success => false, :users => '[]', :error => ''}
   if params[:token] && params[:UUID]
     t = Tokens.get(params[:UUID])
     if t && t.user_key == params[:token]
       u_js = []
-      users = User.all(:helper => true, , :administrator => false)
+      users = User.all(:helper => true, :administrator => false)
       users.each do |u|
         u_js.push(u.user_name)
       end
-      response[:users] = u_js
+      response[:users] = u_js.to_json
       response[:success] = true
       return response.to_json
     end
