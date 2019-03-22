@@ -84,7 +84,10 @@ post "/api/authenticate_user" do
 
         if token != nil
           if !token.isExpired
-            return token.user_key
+            response[:success] = true
+            response[:token] = token.user_key
+            response[:isHelper] = u.helper
+            return response.to_json
           else
             token.destroy
           end
