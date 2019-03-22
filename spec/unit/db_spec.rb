@@ -8,6 +8,7 @@ describe User do
   it { should have_property :password }
   it { should have_property :helper }
   it { should have_property :administrator }
+  it { should have_property :online }
 end
 
 
@@ -17,7 +18,30 @@ describe Tokens do
   it { should have_property :expires }
   it { should have_property :user_key }
   it { should have_property :UUID }
-  it { should have_property :last_request }
+
+  it 'should accept unexpired token' do
+    now = DateTime.now
+    token = Tokens.create(
+      :user_id => 2000,
+      :created_at => now,
+      :expires => now + 1,                                          
+      :user_key => SecureRandom.urlsafe_base64,
+      :UUID => "teaoeust")
+    
+    expect(token.isExpired).to eq(false)
+  end
+
+  it 'should reject expired token' do
+    now = DateTime.now
+    token = Tokens.create(
+      :user_id => 2001,
+      :created_at => now,
+      :expires => now - 1,                                          
+      :user_key => SecureRandom.urlsafe_base64,
+      :UUID => "teaoeustaue")
+    
+    expect(token.isExpired).to eq(true)
+  end
 end
 
 describe Layer_1 do
