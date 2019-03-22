@@ -41,7 +41,7 @@ end
 # REST Handlers
 # -------------
 post "/api/register_user" do
-  response = {:success => false, :error => '', :token => ''}
+  response = {:success => false, :error => ''}
   if params[:name] && params[:user] && params[:helper] && params[:password] && params[:c_password] && params[:UUID]
     if User.all(user_name: params[:user]).count == 0
       if params[:password] == params[:c_password]
@@ -50,18 +50,7 @@ post "/api/register_user" do
             :user_name => params[:user],
             :helper => params[:helper] == '1' ? true : false,
             :password => params[:password])
-
-        now = DateTime.now
-        t = Tokens.create(
-            :user_id => u.id,
-            :created_at => now,
-            :expires => now + 86400,                                          # Token expires in ~ 1 Day (Int is in seconds!)
-            :user_key => SecureRandom.urlsafe_base64,
-            :UUID => params[:UUID],
-            :last_request => now) 
-
         response[:success] = true
-        response[:token] = t.user_key
         return response.to_json
       end
       response[:error] = "Passwords dont match!"
@@ -76,11 +65,13 @@ end
 
 post "/api/authenticate_user" do
   response = {:success => false, :token => '', :error => '', :isHelper => ''}
-  if params[:user] && params[:UUID]
+  if params[:user] && params[:UUID] && params[:password]
     u = User.first(user_name: params[:user])
     if u
       if u.password == params[:password]
-        token = Tokens.get(params[:UUID])
+        u.setOnline
+        u.save!
+        token = Tokens.get(:UUID => params[:UUID], :user_id => params[:u.id])
 
         if token != nil
           if !token.isExpired
@@ -97,11 +88,10 @@ post "/api/authenticate_user" do
         t = Tokens.create(
           :user_id => u.id,
           :created_at => now,
-          :expires => now + 86400,                                          # Token expires in ~ 1 Day (Int is in seconds!)
+          :expires => now + 1,                                          # Token expires in ~ 1 Day (Int is in seconds!)
           :user_key => SecureRandom.urlsafe_base64,
-          :UUID => params[:UUID],
-          :last_request => now
-        )
+          :UUID => params[:UUID])
+        
         response[:success] = true
         response[:token] = t.user_key
         response[:isHelper] = u.helper
@@ -155,6 +145,14 @@ post "/api/get_VIP" do
   end
   response[:error] = "Missing parameter(s)"
   return response.to_json
+end
+
+post "/api/logout" do
+  "No"
+end
+
+post "/api/set_status" do
+  "No"
 end
 
 get "/api/request_helper" do
