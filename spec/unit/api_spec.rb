@@ -34,29 +34,48 @@ describe 'API: ' do
     :helper => false)
   end
 
+  describe 'When signed out' do
+    it 'should allow sign in as Helper' do
+      params = {user: @helper.user_name,
+                UUID: 'abcd',
+                password: @helper.password}
+      post '/api/authenticate_user', params
+
+      expect(last_response.body).to include('"success":true')
+    end
+
+    it 'should allow sign in as VIP' do
+      params = {user: @vip.user_name,
+                UUID: 'abcdd',
+                password: @vip.password}
+      post '/api/authenticate_user', params
+
+      expect(last_response.body).to include('"success":true')
+    end
+  end
+
 
   describe 'When Helper' do
 
     before(:all) do
-      now = Time.now
+      now = DateTime.now
       @token = Tokens.create(
               :user_id => @helper.id,
               :created_at => now,
-              :expires => now + 86400,                                          # Token expires in ~ 1 Day (Int is in seconds!)
+              :expires => now + 1,                                          # Token expires in ~ 1 Day (Int is in seconds!)
               :user_key => SecureRandom.urlsafe_base64,
-              :UUID => "test",
-              :last_request => now)
+              :UUID => "test")
     end
     
     it 'should allow fetching of VIP' do
       params = {token: @token.user_key,
                 UUID: @token.UUID}
 
-      get '/api/get_VIP', params
+      post '/api/get_VIP', params
 
       response = last_response.body
 
-      expect(response).to eq('["admaxinmum","cecuheco"]')
+      expect(response).to eq('{"success":true,"users":"[\\"admaxinmum\\",\\"cecuheco\\"]","error":""}')
     end
 
   end
@@ -64,25 +83,24 @@ describe 'API: ' do
   describe 'When VIP' do
 
     before(:all) do
-      now = Time.now
+      now = DateTime.now
       @token = Tokens.create(
               :user_id => @vip.id,
               :created_at => now,
-              :expires => now + 86400,                                          # Token expires in ~ 1 Day (Int is in seconds!)
+              :expires => now + 1,                                          # Token expires in ~ 1 Day (Int is in seconds!)
               :user_key => SecureRandom.urlsafe_base64,
-              :UUID => "test_VIP",
-              :last_request => now)
+              :UUID => "test_VIP")
     end
 
     it 'should allow fetching of Helper' do
       params = {token: @token.user_key,
                 UUID: @token.UUID}
 
-      get '/api/get_helpers', params
+      post '/api/get_helpers', params
 
       response = last_response.body
 
-      expect(response).to eq('{"success":true,"users":["admaxin","ououtete"],"error":""}')
+      expect(response).to eq('{"success":true,"users":"[\\"admaxin\\",\\"ououtete\\"]","error":""}')
     end
 
   end
