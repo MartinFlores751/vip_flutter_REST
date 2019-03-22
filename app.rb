@@ -115,7 +115,7 @@ post "/api/authenticate_user" do
   end
 end
 
-get "/api/get_helpers" do
+post "/api/get_helpers" do
   response = {:success => false, :users => '[]', :error => ''}
   if params[:token] && params[:UUID]
     t = Tokens.get(params[:UUID])
@@ -136,7 +136,8 @@ get "/api/get_helpers" do
   return response.to_json
 end
 
-get "/api/get_VIP" do
+post "/api/get_VIP" do
+  response = {:success => false, :users => '[]', :error => ''}
   if params[:token] && params[:UUID]
     t = Tokens.get(params[:UUID])
     if t && t.user_key == params[:token]
@@ -145,9 +146,15 @@ get "/api/get_VIP" do
       users.each do |u|
         u_js.push(u.user_name)
       end
-      return u_js.to_json
+      response[:users] = u_js.to_json
+      response[:success] = true
+      return response.to_json
     end
+    response[:error] = "Invalid token"
+    return response.to_json
   end
+  response[:error] = "Missing parameter(s)"
+  return response.to_json
 end
 
 get "/api/request_helper" do
