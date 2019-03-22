@@ -73,16 +73,14 @@ post "/api/authenticate_user" do
         u.save!
         token = Tokens.get(:UUID => params[:UUID], :user_id =>u.id)
 
-        if token != nil
-          if !token.isExpired
-            response[:success] = true
-            response[:token] = token.user_key
-            response[:isHelper] = u.helper
-            return response.to_json
-          else
-            token.destroy
-          end
+        if token != nil && !token.isExpired
+          response[:success] = true
+          response[:token] = token.user_key
+          response[:isHelper] = u.helper
+          return response.to_json
         end
+
+        token.destroy
 
         now = DateTime.now
         t = Tokens.create(
