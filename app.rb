@@ -71,7 +71,7 @@ post "/api/authenticate_user" do
       if u.password == params[:password]
         u.setOnline
         u.save!
-        token = Tokens.get(:UUID => params[:UUID], :user_id => params[:u.id])
+        token = Tokens.get(:UUID => params[:UUID], :user_id =>u.id)
 
         if token != nil
           if !token.isExpired
