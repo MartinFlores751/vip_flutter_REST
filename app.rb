@@ -41,110 +41,160 @@ end
 # REST Handlers
 # -------------
 post "/api/register_user" do
-  response = {:success => false, :error => ''}
+  response = {:success => false, :error => ''}  # Response JSON
+
+  # Check that all params have been sent
   if params[:name] && params[:user] && params[:helper] && params[:password] && params[:c_password] && params[:UUID]
+
+    # Check that the user does not exist
     if User.all(user_name: params[:user]).count == 0
+
+      # Check that the password and confirmation password match
       if params[:password] == params[:c_password]
+
+        # Create a new user
         u = User.create(
             :name => params[:name],
             :user_name => params[:user],
             :helper => params[:helper] == '1' ? true : false,
             :password => params[:password])
+
         response[:success] = true
-        return response.to_json
+        return response.to_json # Return JSON response showing successful creation
       end
+
       response[:error] = "Passwords dont match!"
-      return response.to_json
+      return response.to_json # Return JSON response showing passwords failed to match
     end
+
     response[:error] = "Username already exists!"
-    return response.to_json
+    return response.to_json # Return JSON response showing username is already taken
   end
+
   response[:error] = "Field(s) Empty"
-  return response.to_json
+  return response.to_json # Return JSON response showing not all data has been sent
 end
 
 post "/api/authenticate_user" do
-  response = {:success => false, :token => '', :error => '', :isHelper => ''}
+  response = {:success => false, :token => '', :error => '', :isHelper => ''} # JSON response
+
+  # Check that all parameters have been passed
   if params[:user] && params[:UUID] && params[:password]
-    u = User.first(user_name: params[:user])
-    if u
-      if u.password == params[:password]
-        u.setOnline
-        u.save!
-        token = Tokens.get(:UUID => params[:UUID], :user_id =>u.id)
+    u = User.get(user_name: params[:user]) # Get user for comparison
 
-        if token != nil && !token.isExpired
-          response[:success] = true
-          response[:token] = token.user_key
-          response[:isHelper] = u.helper
-          return response.to_json
-        end
-
-        token.destroy
-
-        now = DateTime.now
-        t = Tokens.create(
-          :user_id => u.id,
-          :created_at => now,
-          :expires => now + 1,                                          # Token expires in ~ 1 Day (Int is in seconds!)
-          :user_key => SecureRandom.urlsafe_base64,
-          :UUID => params[:UUID])
-        
-        response[:success] = true
-        response[:token] = t.user_key
-        response[:isHelper] = u.helper
-        return response.to_json
-      end
-      response[:error] = "Incorrect Password"
-      return response.to_json
+    # If username does not exist...
+    unless u
+      response[:error] = "Account does not Exist"
+      return response.to_json # Return account does not exist error
     end
-    response[:error] = "Account does not Exist"
-    return response.to_json
+
+    # Check to see if the password is valid
+    if u.password == params[:password]
+
+      # Set the user online and save the state
+      u.setOnline
+      u.save!
+
+      token = Tokens.get(:UUID => params[:UUID], :user_id =>u.id) # Get the token using given UUID and user id
+
+      # If a token exists and is not expired...
+      if token != nil && !token.isExpired
+        response[:success] = true
+        response[:token] = token.user_key
+        response[:isHelper] = u.helper
+        return response.to_json # Return success and the token to the user, otherwise...
+      end
+
+      # Create a new token for the User's Device...
+      now = DateTime.now # Using the current time
+      t = Tokens.create(
+        :user_id => u.id,
+        :created_at => now,
+        :expires => now + 1,                        # Token expires in ~ 1 Day
+        :user_key => SecureRandom.urlsafe_base64,
+        :UUID => params[:UUID])
+      
+      # Create the success JSON response
+      response[:success] = true
+      response[:token] = t.user_key
+      response[:isHelper] = u.helper
+      return response.to_json # Return the JSON response with the new key
+    end
+
+    response[:error] = "Incorrect Password"
+    return response.to_json # Return the JSON response signifying Incorrect Password
   end
 end
 
 post "/api/get_helpers" do
-  response = {:success => false, :users => '[]', :error => ''}
+  response = {:success => false, :users => '[]', :error => ''} # JSON Response
+
+  # Check that UUID and Token were passed
   if params[:token] && params[:UUID]
-    t = Tokens.get(params[:UUID])
+
+    t = Tokens.get(params[:UUID]) # Get the token corresponding token
+
+    # Check that the Token exists and that that recived token matches the retrieved DB token
     if t && t.user_key == params[:token]
       u_js = []
-      users = User.all(:helper => true, :administrator => false)
+      users = User.all(:helper => true, :administrator => false) # Gather all helpers, ignore Admin
+
+      # Create array containing all helpers
       users.each do |u|
         u_js.push(u.user_name)
       end
+
+      # Create response JSON
       response[:users] = u_js.to_json
       response[:success] = true
-      return response.to_json
+
+      return response.to_json # Return successful JSON response with list of helpers
     end
+
     response[:error] = "Invalid token"
-    return response.to_json
+    return response.to_json # Return JSON response with Invalid token error
   end
+
   response[:error] = "Missing parameter(s)"
-  return response.to_json
+  return response.to_json # Return JSON response with Missing parameters error
 end
 
 post "/api/get_VIP" do
-  response = {:success => false, :users => '[]', :error => ''}
+  response = {:success => false, :users => '[]', :error => ''} # JSON response
+
+  # Check that token and UUID were passed
   if params[:token] && params[:UUID]
-    t = Tokens.get(params[:UUID])
+
+    t = Tokens.get(params[:UUID]) # Get the corresponding token
+
+    # Check that the token exists and matches the corresponding token
     if t && t.user_key == params[:token]
       u_js = []
-      users = User.all(:helper => false, :administrator => false)
+      users = User.all(:helper => false, :administrator => false) # Gather all VIPs, ignore admin
+
+      # Create array containing all VIPs
       users.each do |u|
         u_js.push(u.user_name)
       end
+
+      # Create Response JSON
       response[:users] = u_js.to_json
       response[:success] = true
-      return response.to_json
+
+      return response.to_json # Return successful JSON Response with list of VIPs
     end
+
     response[:error] = "Invalid token"
-    return response.to_json
+    return response.to_json # Return JSON Response with invalid token error
   end
+  
   response[:error] = "Missing parameter(s)"
-  return response.to_json
+  return response.to_json # Return JSON Response with Missing parameter(s) error
 end
 
+# -----------
+# Unused APIS
+# -----------
 post "/api/logout" do
   "No"
 end
