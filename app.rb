@@ -95,7 +95,7 @@ post "/api/authenticate_user" do
       u.setOnline
       u.save!
 
-      token = Tokens.get(:UUID => params[:UUID], :user_id =>u.id) # Get the token using given UUID and user id
+      token = Tokens.first(:UUID => params[:UUID], :user_id =>u.id) # Get the token using given UUID and user id
 
       # If a token exists and is not expired...
       if token != nil && !token.isExpired
