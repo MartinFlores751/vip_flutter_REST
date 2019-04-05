@@ -80,7 +80,7 @@ post "/api/authenticate_user" do
 
   # Check that all parameters have been passed
   if params[:user] && params[:UUID] && params[:password]
-    u = User.get(user_name: params[:user]) # Get user for comparison
+    u = User.first(:user_name => params[:user]) # Get user for comparison
 
     # If username does not exist...
     unless u
@@ -132,7 +132,7 @@ post "/api/get_helpers" do
   # Check that UUID and Token were passed
   if params[:token] && params[:UUID]
 
-    t = Tokens.get(params[:UUID]) # Get the token corresponding token
+    t = Tokens.first(:UUID => params[:UUID]) # Get the token corresponding token
 
     # Check that the Token exists and that that recived token matches the retrieved DB token
     if t && t.user_key == params[:token]
@@ -165,7 +165,7 @@ post "/api/get_VIP" do
   # Check that token and UUID were passed
   if params[:token] && params[:UUID]
 
-    t = Tokens.get(params[:UUID]) # Get the corresponding token
+    t = Tokens.first(:UUID => params[:UUID]) # Get the corresponding token
 
     # Check that the token exists and matches the corresponding token
     if t && t.user_key == params[:token]
@@ -187,7 +187,7 @@ post "/api/get_VIP" do
     response[:error] = "Invalid token"
     return response.to_json # Return JSON Response with invalid token error
   end
-  
+
   response[:error] = "Missing parameter(s)"
   return response.to_json # Return JSON Response with Missing parameter(s) error
 end
