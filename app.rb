@@ -97,12 +97,16 @@ post "/api/authenticate_user" do
 
       token = Tokens.first(:UUID => params[:UUID], :user_id =>u.id) # Get the token using given UUID and user id
 
-      # If a token exists and is not expired...
-      if token != nil && !token.isExpired
-        response[:success] = true
-        response[:token] = token.user_key
-        response[:isHelper] = u.helper
-        return response.to_json # Return success and the token to the user, otherwise...
+      # If a token exists...
+      if token != nil
+        # And is not expired...
+        if !token.isExpired
+          response[:success] = true
+          response[:token] = token.user_key
+          response[:isHelper] = u.helper
+          return response.to_json # Return success and the token to the user, otherwise...
+        end
+        token.destroy # Destroy token if expired
       end
 
       # Create a new token for the User's Device...
@@ -135,6 +139,8 @@ post "/api/get_helpers" do
     t = Tokens.first(:UUID => params[:UUID]) # Get the token corresponding token
 
     # Check that the Token exists and that that recived token matches the retrieved DB token
+    print "DB key: " + t.user_key
+    print "User key: " + params[:token]
     if t && t.user_key == params[:token]
       u_js = []
       users = User.all(:helper => true, :administrator => false) # Gather all helpers, ignore Admin
