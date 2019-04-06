@@ -8,7 +8,6 @@ describe User do
   it { should have_property :password }
   it { should have_property :helper }
   it { should have_property :administrator }
-  it { should have_property :online }
 end
 
 
@@ -42,6 +41,12 @@ describe Tokens do
     
     expect(token.isExpired).to eq(true)
   end
+end
+
+describe Online_Status do
+  it { should have_property :id }
+  it { should have_property :userid }
+  it { should have_property :status }
 end
 
 describe Layer_1 do

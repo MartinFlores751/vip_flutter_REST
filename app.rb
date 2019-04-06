@@ -6,6 +6,7 @@ require 'data_mapper'
 require 'securerandom'
 require_relative 'user.rb'
 require_relative 'tokens.rb'
+require_relative 'online_status.rb'
 require_relative 'layers.rb'
 
 enable :sessions
@@ -91,10 +92,6 @@ post "/api/authenticate_user" do
     # Check to see if the password is valid
     if u.password == params[:password]
 
-      # Set the user online and save the state
-      u.setOnline
-      u.save!
-
       token = Tokens.first(:UUID => params[:UUID], :user_id =>u.id) # Get the token using given UUID and user id
 
       # If a token exists...
@@ -139,8 +136,6 @@ post "/api/get_helpers" do
     t = Tokens.first(:UUID => params[:UUID]) # Get the token corresponding token
 
     # Check that the Token exists and that that recived token matches the retrieved DB token
-    print "DB key: " + t.user_key
-    print "User key: " + params[:token]
     if t && t.user_key == params[:token]
       u_js = []
       users = User.all(:helper => true, :administrator => false) # Gather all helpers, ignore Admin
