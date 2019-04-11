@@ -6,7 +6,7 @@ class Tokens
     property :created_at, DateTime
     property :expires, DateTime
     property :user_key, String
-    property :UUID, String
+    property :UUID, String, :length => 100
     
     def isExpired()
         now = DateTime.now

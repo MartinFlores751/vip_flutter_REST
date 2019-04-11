@@ -92,32 +92,32 @@ post "/api/authenticate_user" do
     # Check to see if the password is valid
     if u.password == params[:password]
 
-      # token = Tokens.first(:UUID => params[:UUID], :user_id =>u.id) # Get the token using given UUID and user id
+       token = Tokens.first(:UUID => params[:UUID], :user_id =>u.id) # Get the token using given UUID and user id
 
       # If a token exists...
-      # if token != nil
+       if token != nil
         # And is not expired...
-        # if !token.isExpired
+         if !token.isExpired
           response[:success] = true
           response[:token] = token.user_key
           response[:isHelper] = u.helper
           return response.to_json # Return success and the token to the user, otherwise...
-        # end
-        # token.destroy # Destroy token if expired
-      # end
+         end
+         token.destroy # Destroy token if expired
+       end
 
       # Create a new token for the User's Device...
-      # now = DateTime.now # Using the current time
-      # t = Tokens.create(
-      #   :user_id => u.id,
-      #   :created_at => now,
-      #   :expires => now + 1,                        # Token expires in ~ 1 Day
-      #   :user_key => SecureRandom.urlsafe_base64,
-      #   :UUID => params[:UUID])
+       now = DateTime.now # Using the current time
+       t = Tokens.create(
+         :user_id => u.id,
+         :created_at => now,
+         :expires => now + 1,                        # Token expires in ~ 1 Day
+         :user_key => SecureRandom.urlsafe_base64,
+         :UUID => params[:UUID])
       
       # Create the success JSON response
       response[:success] = true
-      response[:token] = "N/A" # t.user_key
+      response[:token] = t.user_key
       response[:isHelper] = u.helper
       return response.to_json # Return the JSON response with the new key
     end
@@ -133,10 +133,10 @@ post "/api/get_helpers" do
   # Check that UUID and Token were passed
   if params[:token] && params[:UUID]
 
-    # t = Tokens.first(:UUID => params[:UUID]) # Get the token corresponding token
+     t = Tokens.first(:UUID => params[:UUID]) # Get the token corresponding token
 
     # Check that the Token exists and that that recived token matches the retrieved DB token
-    # if t && t.user_key == params[:token]
+     if t && t.user_key == params[:token]
       u_js = []
       users = User.all(:helper => true, :administrator => false) # Gather all helpers, ignore Admin
 
@@ -150,7 +150,7 @@ post "/api/get_helpers" do
       response[:success] = true
 
       return response.to_json # Return successful JSON response with list of helpers
-    # end
+     end
 
     response[:error] = "Invalid token"
     return response.to_json # Return JSON response with Invalid token error
@@ -166,10 +166,10 @@ post "/api/get_VIP" do
   # Check that token and UUID were passed
   if params[:token] && params[:UUID]
 
-    # t = Tokens.first(:UUID => params[:UUID]) # Get the corresponding token
+     t = Tokens.first(:UUID => params[:UUID]) # Get the corresponding token
 
     # Check that the token exists and matches the corresponding token
-    # if t && t.user_key == params[:token]
+     if t && t.user_key == params[:token]
       u_js = []
       users = User.all(:helper => false, :administrator => false) # Gather all VIPs, ignore admin
 
@@ -183,7 +183,7 @@ post "/api/get_VIP" do
       response[:success] = true
 
       return response.to_json # Return successful JSON Response with list of VIPs
-    # end
+     end
 
     response[:error] = "Invalid token"
     return response.to_json # Return JSON Response with invalid token error
