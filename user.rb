@@ -8,4 +8,8 @@ class User
     property :password, String
     property :helper, Boolean, :default => false
     property :administrator, Boolean, :default => false
+
+    def login(password)
+      return self.password == password
+    end
 end
