@@ -166,7 +166,7 @@ post "/api/get_VIP" do
   # Check that token and UUID were passed
   if params[:token] && params[:UUID]
 
-     t = Tokens.first(:UUID => params[:UUID]) # Get the corresponding token
+     t = Tokens.first(:UUID => params[:UUID], :user_key => params[:token]) # Get the corresponding token
 
     # Check that the token exists and matches the corresponding token
      if t && t.user_key == params[:token]
