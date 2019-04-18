@@ -133,7 +133,7 @@ post "/api/get_helpers" do
   # Check that UUID and Token were passed
   if params[:token] && params[:UUID]
 
-     t = Tokens.first(:UUID => params[:UUID]) # Get the token corresponding token
+     t = Tokens.first(:UUID => params[:UUID],  :user_key => params[:token]) # Get the token corresponding token
 
     # Check that the Token exists and that that recived token matches the retrieved DB token
      if t && t.user_key == params[:token]
