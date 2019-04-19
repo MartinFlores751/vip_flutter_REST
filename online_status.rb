@@ -7,14 +7,14 @@ class Online_Status
     property :status, Integer, :default => 0
 
     def setOnline
-        self.online = 2
+        self.status = 2
     end
 
     def setOffline
-        self.offline = 0
+        self.status = 0
     end
 
     def setAway
-        self.away = 1
+        self.status = 1
     end
 end
