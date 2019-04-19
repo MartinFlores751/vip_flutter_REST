@@ -133,20 +133,11 @@ post "/api/get_helpers" do
   # Check that UUID and Token were passed
   if params[:token] && params[:UUID]
 
-     t = Tokens.first(:UUID => params[:UUID],  :user_key => params[:token]) # Get the token corresponding token
-
     # Check that the Token exists and that that recived token matches the retrieved DB token
-     if t && t.user_key == params[:token]
-      u_js = []
-      users = User.all(:helper => true, :administrator => false) # Gather all helpers, ignore Admin
-
-      # Create array containing all helpers
-      users.each do |u|
-        u_js.push(u.user_name)
-      end
-
+    if rest_authenticate(params[:token], params[:UUID])
+      
       # Create response JSON
-      response[:users] = u_js.to_json
+      response[:users] = rest_get_users_JSON(false)
       response[:success] = true
 
       return response.to_json # Return successful JSON response with list of helpers
@@ -165,21 +156,12 @@ post "/api/get_VIP" do
 
   # Check that token and UUID were passed
   if params[:token] && params[:UUID]
-
-     t = Tokens.first(:UUID => params[:UUID], :user_key => params[:token]) # Get the corresponding token
-
-    # Check that the token exists and matches the corresponding token
-     if t && t.user_key == params[:token]
-      u_js = []
-      users = User.all(:helper => false, :administrator => false) # Gather all VIPs, ignore admin
-
-      # Create array containing all VIPs
-      users.each do |u|
-        u_js.push(u.user_name)
-      end
-
+    
+    # Check that the token is valid
+    if rest_authenticate!(params[:token], params[:UUID])
+      
       # Create Response JSON
-      response[:users] = u_js.to_json
+      response[:users] = rest_get_users_JSON(true)
       response[:success] = true
 
       return response.to_json # Return successful JSON Response with list of VIPs
@@ -245,16 +227,45 @@ end
 # Helper Functions
 # ----------------
 def current_user
-	if(session[:user_name])
-		@u ||= User.first(user_name: session[:user_name])
-		return @u
-	else
-		return nil
-	end
+  if(session[:user_name])
+    @u ||= User.first(user_name: session[:user_name])
+    return @u
+  else
+    return nil
+  end
 end
 
 def authenticate!
-	if !current_user || !current_user.administrator
-		redirect "/"
-	end
+  if !current_user || !current_user.administrator
+    redirect "/"
+  end
+end
+
+def rest_authenticate!(token, user_UUID)
+  t = Tokens.first(:UUID => user_UUID, :user_key => token) # Get the corresponding token
+
+  # Check that the token exists and matches the corresponding token
+  if t && t.user_key == params[:token]
+    return true # Token exists, return true
+  end
+
+  false # Token doesn't exist, return false
+end
+
+def rest_get_users_JSON(getVIP)
+  u_js = [] # JS array to return
+
+  if getVIP
+    users = User.all(:helper => false, :administrator => false) # Gather all VIPs, ignore admin
+  else
+    users = User.all(:helper => true, :administrator => false) # Gather all Helpers, ignore admin
+  end
+  
+  # Create array containing all VIPs or all Helpers
+  users.each do |u|
+    u_js.push(u.user_name)
+  end
+
+  # Create JSON array and return it
+  u_js.to_json
 end
