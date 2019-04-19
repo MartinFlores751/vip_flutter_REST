@@ -115,7 +115,7 @@ post "/api/authenticate_user" do
          :expires => now + 1,                        # Token expires in ~ 1 Day
          :user_key => SecureRandom.urlsafe_base64,
          :UUID => params[:UUID])
-      
+
       # Create the success JSON response
       response[:success] = true
       response[:token] = t.user_key
@@ -219,8 +219,35 @@ post "/auth" do
   end
 end
 
+#this displays the selected user's profile when you click on their name
+get "/user_profile" do
+  authenticate!
+  if params[:user_name]
+    @user = User.first(user_name: params[:user_name])
+    erb :user_profile
+  else
+    redirect "/dashboard"
+  end
+end
+
 get "/dashboard" do
   authenticate!
+  #get all VIP & Helper users & online users to display onto the dashboard
+  @vipUsers = User.all(:helper => false, :administrator => false)
+  @helperUsers = User.all(:helper => true, :administrator => false)
+  @allUsers = User.all()
+  @finalOnlineUsers = []
+  #for each user, get their online status
+  #if their online status is 2, then push
+  #user into the finalOnlineUsers array
+  @allUsers.each do |x|
+    user = Online_Status.first(:userid => x.id)
+    if user != nil
+      if user.status == 2
+        @finalOnlineUsers.push(x)
+      end
+    end
+  end
   erb :dashboard
 end
 
