@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>User Profile</title>
+</head>
+<style type="text/css">
+  .userProfileCard{
+    position: absolute;
+    top: 50%;
+    left:50%;
+    transform: translate(-50%,-50%);
+
+    border-radius: 1em;
+    padding: 1em;
+    position: absolute;
+    box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
+    transition: 0.3s;
+    border-radius: 10px;
+    padding: 50px;
+  }
+</style>
+<body>
+  <div class="userProfileCard">
+    <div class="card" style="width:400px; border-color: white">
+      <img class="card-img-top" src="https://cdn.iconscout.com/icon/free/png-512/avatar-372-456324.png" alt="Card image">
+      <div class="card-body">
+        <h4 class="card-title"><%= @user.name %></h4>
+        <p class="card-text">Some example text.</p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

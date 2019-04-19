@@ -1,16 +1,55 @@
-</br>
-</br>
-</br>
-<div class="container">
-	<form action="/auth" method="POST">
-	  <div class="form-group">
-	    <label for="username">Username</label>
-	    <input type="text" class="form-control" placeholder="Enter name" name="user">
-	  </div>
-	  <div class="form-group">
-	    <label for="Password">Password</label>
-	    <input type="password" class="form-control" placeholder="Password" name="password">
-	  </div>
-	  <button type="submit" class="btn btn-primary" value="Login">Login</button>
-	</form>
-</div>
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+	<meta http-equiv="X-UA-Compatible" content="ie=edge">
+	<title>Document</title>
+</head>
+<style type="text/css">
+.containerLogin{
+	animation-timing-function: ease-out;
+	animation: mymove 1s;
+	background: white;
+	color: black;
+	border-radius: 1em;
+	padding: 1em;
+	position: absolute;
+	box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
+	transition: 0.3s;
+	border-radius: 10px;
+	padding: 50px;
+	top: 50%;
+	left: 50%;
+	width: 700px;
+	margin-right: -50%;
+	transform: translate(-50%, -50%)
+}
+		@keyframes mymove {
+			from{top: -1000px}
+			to{
+				top: 50%;
+				left: 50%;
+				width: 700px;
+				margin-right: -50%;
+				transform: translate(-50%, -50%)
+			}
+
+		}
+</style>
+<body>
+	<div class="containerLogin">
+		<form action="/auth" method="POST">
+			<div class="form-group">
+				<label for="username" style="font-size: 20pt">Username</label>
+				<input type="text" class="form-control" placeholder="Enter name" name="user" style="font-size: 25pt;user-focus-key: true">
+			</div>
+			<div class="form-group">
+				<label for="Password" style="font-size: 20pt">Password</label>
+				<input type="password" class="form-control" placeholder="Password" name="password" style="font-size: 25pt">
+			</div>
+			<button type="submit" class="btn btn-primary" value="Login" style="font-size: 20pt;float: right">Login</button>
+		</form>
+	</div>
+</body>
+</html>

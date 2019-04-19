@@ -1,35 +1,79 @@
-<p>
-Helpers Registered: <br>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Dashboard</title>
+</head>
+<style type="text/css">
+  .row{
+    height: 88vh;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    margin-right: -50%;
+    transform: translate(-50%, -50%)
+  }
+    .rowContainer{
+      margin: 50px;
+      height: 88vh;
+      width: 50vh;
+      background: white;
+      color: black;
+      border-radius: 1em;
+      padding: 1em;
+      box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
+      transition: 0.3s;
+      border-radius: 10px;
+      padding: 50px;
+      overflow: hidden;
 
-<!-- HTML comment BTW: Create list containing Helpers Registered -->
-<ul>
-<li>
-</ul>
-</p>
 
-<p>
-VIPs Registered: <br>
+      display: flex;
+      flex-direction: column;
+    }
+    .labelContainer{
+    }
+    .listView{
+      overflow-y: scroll;
+    }
+</style>
+<body>
+<div class="row">
+  <div class="rowContainer">
+    <div class="labelContainer">
+      <label style="font-size: 20px;">Helpers Registered</label>
+    </div>
+    <div class="listView">
+      <ul class="list-group">
+        <%  @helperUsers.each do |h| %>
+          <a href="/user_profile?user_name=<%= h.user_name %>" class="list-group-item list-group-item-action"> <%= h.user_name %> </a>
+        <% end %>
+      </ul>
+    </div>
+  </div>
+  <div class="rowContainer">
+    <label style="font-size: 20px;">VIPs Registered</label>
+    <div class="listView">
+      <ul class="list-group">
+        <%  @vipUsers.each do |h| %>
+          <a href="/user_profile?user_name=<%= h.user_name %>" class="list-group-item list-group-item-action"> <%= h.user_name %> </a>
+        <% end %>
+      </ul>
+    </div>
+  </div>
+  <div class="rowContainer">
+    <label style="font-size: 20px;">Users Online</label>
+    <div class="listView">
+      <ul class="list-group">
+        <%  @finalOnlineUsers.each do |h| %>
+          <a href="/user_profile?user_name=<%= h.user_name %>" class="list-group-item list-group-item-action"> <%= h.user_name %> </a>
+        <% end %>
+      </ul>
+    </div>
+  </div>
+</div>
 
-<!-- HTML comment BTW: Create list containing VIPs Registered -->
-<ul>
-<li>
-</ul>
-</p>
-
-<p>
-Users online: <br>
-
-<!-- HTML comment BTW: Create list containing Users online -->
-<ul>
-<li>
-</ul>
-</p>
-
-<p>
-Helpers Registered: <br>
-
-<!-- HTML comment BTW: Create list containing Helpers Registered -->
-<ul>
-<li>
-</ul>
-</p>
+</body>
+</html>
