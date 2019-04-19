@@ -135,7 +135,7 @@ post "/api/get_helpers" do
   if params[:token] && params[:UUID]
 
     # Check that the Token exists and that that recived token matches the retrieved DB token
-    if rest_authenticate(params[:token], params[:UUID])
+    if rest_authenticate!(params[:token], params[:UUID])
       
       # Create response JSON
       response[:users] = rest_get_users_JSON(false)
