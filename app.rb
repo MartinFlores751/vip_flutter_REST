@@ -26,6 +26,7 @@ Tokens.auto_upgrade!
 Layer_1.auto_upgrade!
 Layer_2.auto_upgrade!
 Layer_3.auto_upgrade!
+Online_Status.auto_upgrade!
 
 # ----------------------
 # Create admin for later
