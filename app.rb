@@ -186,7 +186,41 @@ end
 # Unused APIS
 # -----------
 post "/api/logout" do
-  "No"
+  response = {:success => false, :status => -1, :error => ''} #json response
+
+  #check that token and UUID were passed
+  if params[:token] && params[:UUID]
+
+    token = Tokens.first(:user_key => params[:token], :UUID => params[:UUID])
+
+    # If the token exists...
+    if token != nil
+      # And is not expired...
+      if token.isExpired
+        response[:success] = false
+        response[:status] = -1
+        response[:error] = "Token does not exist!"
+        return response.to_json # Return success and the token to the user, otherwise...
+      end
+
+      #check that the token is valid
+      if rest_authenticate!(params[:token], params[:UUID])
+
+        #set the status to offline and destroy the token
+        u = Online_Status.first(:userid => token.user_id)
+        u.status = 0
+        u.save
+        token.destroy
+        response[:success] = true
+        response[:status] = 0
+        return response.to_json
+      end
+    end
+  end
+
+  response[:success] = false
+  response[:status] = -1
+  return response.to_json
 end
 
 post "/api/set_status" do
