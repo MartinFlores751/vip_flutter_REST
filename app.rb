@@ -220,6 +220,7 @@ post "/api/logout" do
 
   response[:success] = false
   response[:status] = -1
+  response[:error] = "Invalid parameters"
   return response.to_json
 end
 
