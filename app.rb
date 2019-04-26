@@ -61,6 +61,12 @@ post "/api/register_user" do
             :helper => params[:helper] == '1' ? true : false,
             :password => params[:password])
 
+        #create that same user for Online_Status
+        o = Online_Status.create(
+            :userid => u.id,
+            :status => 0
+        )
+
         response[:success] = true
         return response.to_json # Return JSON response showing successful creation
       end
@@ -134,7 +140,7 @@ post "/api/get_helpers" do
   # Check that UUID and Token were passed
   if params[:token] && params[:UUID]
 
-    # Check that the Token exists and that that recived token matches the retrieved DB token
+    # Check that the Token exists and that that received token matches the retrieved DB token
     if rest_authenticate!(params[:token], params[:UUID])
       
       # Create response JSON
@@ -184,7 +190,42 @@ post "/api/logout" do
 end
 
 post "/api/set_status" do
-  "No"
+  response = {:success => false, :status => 0, :error => ''} # JSON Response
+
+  #check that the token, the UUID, and the userid were passed
+  if params[:token] && params[:UUID] && params[:status]
+
+    token = Tokens.first(:user_key => params[:token], :UUID => params[:UUID])
+
+    # If the token exists...
+    if token != nil
+      # And is not expired...
+      if token.isExpired
+        response[:success] = false
+        response[:status] = -1
+        response[:error] = "Please log in again!"
+        return response.to_json # Return success and the token to the user, otherwise...
+      end
+
+      #check that the token is valid
+      if rest_authenticate!(params[:token], params[:UUID])
+
+        #set the status of the user
+        u = Online_Status.first(:userid => token.user_id)
+        u.status = params[:status]
+        u.save
+        response[:success] = true
+        response[:status] = params[:status]
+        return response.to_json
+      end
+    end
+  end
+
+  #if the params are invalid return error response
+  response[:success] = false
+  response[:status] = -1
+  response[:error] = "Invalid parameters"
+  return response.to_json
 end
 
 get "/api/request_helper" do
