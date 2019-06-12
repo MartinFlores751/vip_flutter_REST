@@ -1,9 +1,8 @@
 require 'data_mapper'
 
-class Online_Status
+class OnlineStatus
     include DataMapper::Resource
-    property :id, Serial
-    property :userid, Integer
+    property :userid, Serial
     property :status, Integer, :default => 0
 
     def setOnline

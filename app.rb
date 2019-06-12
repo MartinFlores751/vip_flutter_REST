@@ -7,7 +7,7 @@ require 'securerandom'
 require_relative 'user.rb'
 require_relative 'tokens.rb'
 require_relative 'online_status.rb'
-require_relative 'layers.rb'
+require_relative 'favorite.rb'
 
 enable :sessions
 
@@ -23,10 +23,8 @@ end
 DataMapper.finalize
 User.auto_upgrade!
 Tokens.auto_upgrade!
-Layer_1.auto_upgrade!
-Layer_2.auto_upgrade!
-Layer_3.auto_upgrade!
-Online_Status.auto_upgrade!
+Favorites.auto_upgrade!
+OnlineStatus.auto_upgrade!
 
 # ----------------------
 # Create admin for later
@@ -55,15 +53,14 @@ post "/api/register_user" do
       if params[:password] == params[:c_password]
 
         # Create a new user
-        u = User.create(
+        User.create(
             :name => params[:name],
             :user_name => params[:user],
             :helper => params[:helper] == '1' ? true : false,
             :password => params[:password])
 
-        #create that same user for Online_Status
-        o = Online_Status.create(
-            :userid => u.id,
+        #create that same user for OnlineStatus
+        OnlineStatus.create(
             :status => 0
         )
 
@@ -134,6 +131,28 @@ post "/api/authenticate_user" do
   end
 end
 
+post "/api/get_favorites" do
+  response = {:success => false, :favorites => '[]', :error => ''}
+
+  # Check that all needed params are passed
+  if params[:token] && params[:UUID] && params[:isHelper]
+
+    # Check that token and UUID pair is valid
+    if rest_authenticate!(params[:token], params[:UUID])
+      token = Tokens.first(:user_key => params[:token], :UUID => params[:UUID])
+      response[:favorites] = rest_get_friends_JSON(token.user_id, params[:isHelper])
+      response[:success] = true
+      return response
+    end
+
+    response[:error] = 'Authentification failed!'
+    return response
+  end
+
+  response[:error] = 'Not all parameters passed'
+  return response
+end
+
 post "/api/get_helpers" do
   response = {:success => false, :users => '[]', :error => ''} # JSON Response
 
@@ -182,6 +201,55 @@ post "/api/get_VIP" do
   return response.to_json # Return JSON Response with Missing parameter(s) error
 end
 
+post "/api/set_status" do
+  response = {:success => false, :status => 0, :error => ''} # JSON Response
+
+  #check that the token, the UUID, and the userid were passed
+  if params[:token] && params[:UUID] && params[:status]
+
+    token = Tokens.first(:user_key => params[:token], :UUID => params[:UUID])
+
+    # If the token exists...
+    if token != nil
+      # And is not expired...
+      if token.isExpired
+        response[:success] = false
+        response[:status] = -1
+        response[:error] = "Please log in again!"
+        return response.to_json # Return success and the token to the user, otherwise...
+      end
+
+      #check that the token is valid
+      if rest_authenticate!(params[:token], params[:UUID])
+
+        #set the status of the user
+        u = OnlineStatus.first(:userid => token.user_id)
+        if u == nil
+          print 'THERE IS NO ONLINE STATUS!!!!'
+        end
+        status = params[:status]
+        if status == '2'
+          u.setOnline
+        elsif status == '1'
+          u.setAway
+        else
+          u.setOffline
+        end
+        u.save
+        response[:success] = true
+        response[:status] = params[:status]
+        return response.to_json
+      end
+    end
+  end
+
+  #if the params are invalid return error response
+  response[:success] = false
+  response[:status] = -1
+  response[:error] = "Invalid parameters"
+  return response.to_json
+end
+
 # -----------
 # Unused APIS
 # -----------
@@ -207,7 +275,7 @@ post "/api/logout" do
       if rest_authenticate!(params[:token], params[:UUID])
 
         #set the status to offline and destroy the token
-        u = Online_Status.first(:userid => token.user_id)
+        u = OnlineStatus.first(:userid => token.user_id)
         u.status = 0
         u.save
         token.destroy
@@ -218,45 +286,6 @@ post "/api/logout" do
     end
   end
 
-  response[:success] = false
-  response[:status] = -1
-  response[:error] = "Invalid parameters"
-  return response.to_json
-end
-
-post "/api/set_status" do
-  response = {:success => false, :status => 0, :error => ''} # JSON Response
-
-  #check that the token, the UUID, and the userid were passed
-  if params[:token] && params[:UUID] && params[:status]
-
-    token = Tokens.first(:user_key => params[:token], :UUID => params[:UUID])
-
-    # If the token exists...
-    if token != nil
-      # And is not expired...
-      if token.isExpired
-        response[:success] = false
-        response[:status] = -1
-        response[:error] = "Please log in again!"
-        return response.to_json # Return success and the token to the user, otherwise...
-      end
-
-      #check that the token is valid
-      if rest_authenticate!(params[:token], params[:UUID])
-
-        #set the status of the user
-        u = Online_Status.first(:userid => token.user_id)
-        u.status = params[:status]
-        u.save
-        response[:success] = true
-        response[:status] = params[:status]
-        return response.to_json
-      end
-    end
-  end
-
-  #if the params are invalid return error response
   response[:success] = false
   response[:status] = -1
   response[:error] = "Invalid parameters"
@@ -317,7 +346,7 @@ get "/dashboard" do
   #if their online status is 2, then push
   #user into the finalOnlineUsers array
   @allUsers.each do |x|
-    user = Online_Status.first(:userid => x.id)
+    user = OnlineStatus.first(:userid => x.id)
     if user != nil
       if user.status == 2
         @finalOnlineUsers.push(x)
@@ -372,4 +401,30 @@ def rest_get_users_JSON(getVIP)
 
   # Create JSON array and return it
   u_js.to_json
+end
+
+def rest_get_friends_JSON(userID, isHelper)
+  f_js = []
+  f_id = []
+
+  if isHelper
+    friends = Friends.all(:helper_id => userID)
+
+    friends.each do |f|
+      f_id.push(f.vip_id)
+    end
+  else
+    friends = Friends.all(:vip_id => userID)
+
+    friends.each do |f|
+      f_id.push(f.helper_id)
+    end
+  end
+
+  f_id.each do |id|
+    u = User.get(id)
+    f_js.push(u.user_name)
+  end
+
+  return f_js.to_json
 end

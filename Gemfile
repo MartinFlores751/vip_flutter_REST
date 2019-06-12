@@ -19,6 +19,11 @@ group :test do
   gem 'rack_session_access'
   gem 'poltergeist'
   gem 'puma'
+  gem 'ruby-debug-ide'
+  gem 'debase'
+  gem 'rubocop'
+  gem 'rcodetools'
+  gem 'fastri'
 end
 
 group :production do

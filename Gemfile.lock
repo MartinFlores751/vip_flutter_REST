@@ -3,6 +3,7 @@ GEM
   specs:
     addressable (2.6.0)
       public_suffix (>= 2.0.2, < 4.0)
+    ast (2.4.0)
     bcrypt (3.1.12)
     bcrypt-ruby (3.1.5)
       bcrypt (>= 3.1.3)
@@ -28,6 +29,9 @@ GEM
       dm-validations (~> 1.2.0)
     data_objects (0.10.17)
       addressable (~> 2.1)
+    debase (0.2.2)
+      debase-ruby_core_source (>= 0.10.2)
+    debase-ruby_core_source (0.10.5)
     diff-lcs (1.3)
     dm-aggregates (1.2.0)
       dm-core (~> 1.2.0)
@@ -74,6 +78,8 @@ GEM
     do_sqlite3 (0.10.17)
       data_objects (= 0.10.17)
     fastercsv (1.5.5)
+    fastri (0.3.1.1)
+    jaro_winkler (1.5.2)
     json (1.8.6)
     json_pure (1.8.6)
     mini_mime (1.0.1)
@@ -82,6 +88,9 @@ GEM
     mustermann (1.0.3)
     nokogiri (1.10.1)
       mini_portile2 (~> 2.4.0)
+    parallel (1.17.0)
+    parser (2.6.3.0)
+      ast (~> 2.4.0)
     pg (1.1.4)
     poltergeist (1.18.1)
       capybara (>= 2.1, < 4)
@@ -97,7 +106,9 @@ GEM
     rack_session_access (0.2.0)
       builder (>= 2.0.0)
       rack (>= 1.0.0)
+    rainbow (3.0.0)
     rake (12.3.2)
+    rcodetools (0.8.5.0)
     regexp_parser (1.3.0)
     rspec (3.8.0)
       rspec-core (~> 3.8.0)
@@ -112,6 +123,16 @@ GEM
       diff-lcs (>= 1.2.0, < 2.0)
       rspec-support (~> 3.8.0)
     rspec-support (3.8.0)
+    rubocop (0.71.0)
+      jaro_winkler (~> 1.5.1)
+      parallel (~> 1.10)
+      parser (>= 2.6)
+      rainbow (>= 2.2.2, < 4.0)
+      ruby-progressbar (~> 1.7)
+      unicode-display_width (>= 1.4.0, < 1.7)
+    ruby-debug-ide (0.7.0)
+      rake (>= 0.8.1)
+    ruby-progressbar (1.10.1)
     sinatra (2.0.5)
       mustermann (~> 1.0)
       rack (~> 2.0)
@@ -120,6 +141,7 @@ GEM
     sqlite3 (1.4.0)
     stringex (1.5.1)
     tilt (2.0.9)
+    unicode-display_width (1.6.0)
     uuidtools (2.1.5)
     websocket-driver (0.7.0)
       websocket-extensions (>= 0.1.0)
@@ -133,17 +155,22 @@ PLATFORMS
 DEPENDENCIES
   capybara
   data_mapper
+  debase
   dm-postgres-adapter
   dm-rspec
   dm-sqlite-adapter
+  fastri
   pg
   poltergeist
   puma
   rack-test
   rack_session_access
   rake
+  rcodetools
   rspec
   rspec-core
+  rubocop
+  ruby-debug-ide
   sinatra
   sqlite3
 

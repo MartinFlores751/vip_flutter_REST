@@ -56,3 +56,6 @@ build-iPhoneSimulator/
 
 # ignore local db
 *.db
+
+# ignore VSCode config
+.vscode/
