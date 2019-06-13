@@ -53,7 +53,7 @@ post "/api/register_user" do
       if params[:password] == params[:c_password]
 
         # Create a new user
-        User.create(
+        u = User.create(
             :name => params[:name],
             :user_name => params[:user],
             :helper => params[:helper] == '1' ? true : false,
@@ -61,7 +61,8 @@ post "/api/register_user" do
 
         #create that same user for OnlineStatus
         OnlineStatus.create(
-            :status => 0
+            :status => 0,
+            :user_id => u.id
         )
 
         response[:success] = true
@@ -223,7 +224,7 @@ post "/api/set_status" do
       if rest_authenticate!(params[:token], params[:UUID])
 
         #set the status of the user
-        u = OnlineStatus.first(:userid => token.user_id)
+        u = OnlineStatus.first(:user_id => token.user_id)
         if u == nil
           print 'THERE IS NO ONLINE STATUS!!!!'
         end

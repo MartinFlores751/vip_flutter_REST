@@ -2,7 +2,7 @@ require 'data_mapper'
 
 class OnlineStatus
     include DataMapper::Resource
-    property :userid, Serial
+    property :user_id, Integer, :key => true
     property :status, Integer, :default => 0
 
     def setOnline
