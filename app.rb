@@ -50,27 +50,30 @@ before "/api/*" do
     methodAndPass = auth.to_s.split(' ')
 
     if methodAndPass[0] == 'Basic'
+      print "Basic Auth\n"
 
       userAndPass = Base64.decode64(methodAndPass[1])
       userPass = userAndPass.split(' ')
-      user = User.first(:user_name => userPass[0])
+      usernameAndPassword = userPass[0].split(':')
+      user = User.first(:user_name => usernameAndPassword[0])
 
-      if user && user.login(userPass[0])
+      if user && user.login(usernameAndPassword[1])
+        print "Successfully authed!\n"
         session[:user_name] = user.user_name
         pass
       end
-
     end
 
+    
     unless rest_authenticate!(session[:token], params[:UUID])
+      print "Auth fail!\n"
       response[:error] = 'Invalid auth type!'
-      halt 401, {'Content-Type' => 'application/json'}, response.to_json # Catch all for invalid logins
+      halt 401, {'Content-Type' => 'application/json'}, response.to_json # Catch all for invalid login
     end
+
+    print "Successfully authed!\n"
+    pass
   end
-end
-
-after "/api/*" do
-
 end
 
 post "/api/register_user", :provides => :json do
@@ -185,21 +188,13 @@ post "/api/get_helpers", :provides => 'json' do
 
   # Check that UUID and Token were passed
   if params[:UUID]
+    # Create response JSON
+    response[:users] = rest_get_users_JSON(false)
+    response[:success] = true
 
-    # Check that the Token exists and that that received token matches the retrieved DB token
-    if rest_authenticate!(session[:token], params[:UUID])
-      
-      # Create response JSON
-      response[:users] = rest_get_users_JSON(false)
-      response[:success] = true
-
-      return response.to_json # Return successful JSON response with list of helpers
-     end
-
-    response[:error] = "Invalid token"
-    return response.to_json # Return JSON response with Invalid token error
+    return response.to_json # Return successful JSON response with list of helpers
   end
-
+  
   response[:error] = "Missing parameter(s)"
   return response.to_json # Return JSON response with Missing parameters error
 end
@@ -283,7 +278,7 @@ post "/api/add_favorites", :provides => 'json' do
   content_type :json
   response = {:success => false, :error => ''};
   if params[:UUID] && params[:username]
-    
+    print "TEMP: I now declare you friends...\n"
   else
     response[:error] = 'Missing arguments!'
     return response.to_json
@@ -347,7 +342,7 @@ get "/dashboard" do
   #if their online status is 2, then push
   #user into the finalOnlineUsers array
   @allUsers.each do |x|
-    user = OnlineStatus.first(:userid => x.id)
+    user = OnlineStatus.first(:user_id => x.id)
     if user != nil
       if user.status == 2
         @finalOnlineUsers.push(x)
@@ -376,11 +371,11 @@ helpers do
     end
   end
 
-  def rest_authenticate!(token, user_UUID)
-    t = Tokens.first(:UUID => user_UUID, :user_key => token) # Get the corresponding token
+  def rest_authenticate!(token, userUUID)
+    t = Tokens.first(:UUID => userUUID, :user_key => token) # Get the corresponding token
 
     # Check that the token exists and matches the corresponding token
-    if t && t.user_key == params[:token]
+    if t
       return true # Token exists, return true
     end
 
