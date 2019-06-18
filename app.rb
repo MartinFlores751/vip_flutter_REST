@@ -4,6 +4,8 @@
 require 'sinatra'
 require 'data_mapper'
 require 'securerandom'
+require 'json'
+require 'base64'
 require_relative 'user.rb'
 require_relative 'tokens.rb'
 require_relative 'online_status.rb'
@@ -40,7 +42,42 @@ end
 # -------------
 # REST Handlers
 # -------------
-post "/api/register_user" do
+before "/api/*" do
+  unless (params[:splat][0]) == 'register_user'
+
+    response = {:success => false, :error => ''}
+    auth = env['HTTP_AUTHORIZATION'] # Retrive auth typ and pass
+    methodAndPass = auth.to_s.split(' ')
+
+    if methodAndPass[0] == 'Basic'
+      print "Basic Auth\n"
+
+      userAndPass = Base64.decode64(methodAndPass[1])
+      userPass = userAndPass.split(' ')
+      usernameAndPassword = userPass[0].split(':')
+      user = User.first(:user_name => usernameAndPassword[0])
+
+      if user && user.login(usernameAndPassword[1])
+        print "Successfully authed!\n"
+        session[:user_name] = user.user_name
+        pass
+      end
+    end
+
+    
+    unless rest_authenticate!(session[:token], params[:UUID])
+      print "Auth fail!\n"
+      response[:error] = 'Invalid auth type!'
+      halt 401, {'Content-Type' => 'application/json'}, response.to_json # Catch all for invalid login
+    end
+
+    print "Successfully authed!\n"
+    pass
+  end
+end
+
+post "/api/register_user", :provides => :json do
+  content_type :json
   response = {:success => false, :error => ''}  # Response JSON
 
   # Check that all params have been sent
@@ -81,66 +118,57 @@ post "/api/register_user" do
   return response.to_json # Return JSON response showing not all data has been sent
 end
 
-post "/api/authenticate_user" do
-  response = {:success => false, :token => '', :error => '', :isHelper => ''} # JSON response
+post "/api/authenticate_user", :provides => :json do
+  content_type :json
+  response = {:success => false, :error => '', :isHelper => ''} # JSON response
 
   # Check that all parameters have been passed
-  if params[:user] && params[:UUID] && params[:password]
-    u = User.first(:user_name => params[:user]) # Get user for comparison
-
-    # If username does not exist...
-    unless u
-      response[:error] = "Account does not Exist"
-      return response.to_json # Return account does not exist error
-    end
-
-    # Check to see if the password is valid
-    if u.password == params[:password]
-
-       token = Tokens.first(:UUID => params[:UUID], :user_id =>u.id) # Get the token using given UUID and user id
-
-      # If a token exists...
-       if token != nil
-        # And is not expired...
-         if !token.isExpired
+  if params[:UUID]
+    u = User.first(:user_name => session[:user_name]) # Get user for comparison
+    token = Tokens.first(:UUID => params[:UUID], :user_id =>u.id) # Get the token using given UUID and user id
+    session[:user_name] = u.user_name
+    # If a token exists...
+      if token != nil
+      # And is not expired...
+        unless  token.isExpired
           response[:success] = true
-          response[:token] = token.user_key
+          session[:token] = token.user_key
           response[:isHelper] = u.helper
           return response.to_json # Return success and the token to the user, otherwise...
-         end
-         token.destroy # Destroy token if expired
-       end
+        end
+        token.destroy # Destroy token if expired
+      end
 
-      # Create a new token for the User's Device...
-       now = DateTime.now # Using the current time
-       t = Tokens.create(
-         :user_id => u.id,
-         :created_at => now,
-         :expires => now + 1,                        # Token expires in ~ 1 Day
-         :user_key => SecureRandom.urlsafe_base64,
-         :UUID => params[:UUID])
+    # Create a new token for the User's Device...
+      now = DateTime.now # Using the current time
+      t = Tokens.create(
+        :user_id => u.id,
+        :created_at => now,
+        :expires => now + 1,                        # Token expires in ~ 1 Day
+        :user_key => SecureRandom.urlsafe_base64,
+        :UUID => params[:UUID])
 
-      # Create the success JSON response
-      response[:success] = true
-      response[:token] = t.user_key
-      response[:isHelper] = u.helper
-      return response.to_json # Return the JSON response with the new key
-    end
-
-    response[:error] = "Incorrect Password"
-    return response.to_json # Return the JSON response signifying Incorrect Password
+    # Create the success JSON response
+    response[:success] = true
+    session[:token] = t.user_key
+    response[:isHelper] = u.helper
+    return response.to_json # Return the JSON response with the new key
   end
+
+  response[:error] = "Incorrect Password"
+  return response.to_json # Return the JSON response signifying Incorrect Password
 end
 
-post "/api/get_favorites" do
+post "/api/get_favorites", :provides => 'json' do
+  content_type :json
   response = {:success => false, :favorites => '[]', :error => ''}
 
   # Check that all needed params are passed
-  if params[:token] && params[:UUID] && params[:isHelper]
+  if params[:UUID] && params[:isHelper]
 
     # Check that token and UUID pair is valid
-    if rest_authenticate!(params[:token], params[:UUID])
-      token = Tokens.first(:user_key => params[:token], :UUID => params[:UUID])
+    if rest_authenticate!(session[:token], params[:UUID])
+      token = Tokens.first(:user_key => session[:token], :UUID => params[:UUID])
       response[:favorites] = rest_get_friends_JSON(token.user_id, params[:isHelper])
       response[:success] = true
       return response
@@ -154,38 +182,32 @@ post "/api/get_favorites" do
   return response
 end
 
-post "/api/get_helpers" do
+post "/api/get_helpers", :provides => 'json' do
+  content_type :json
   response = {:success => false, :users => '[]', :error => ''} # JSON Response
 
   # Check that UUID and Token were passed
-  if params[:token] && params[:UUID]
+  if params[:UUID]
+    # Create response JSON
+    response[:users] = rest_get_users_JSON(false)
+    response[:success] = true
 
-    # Check that the Token exists and that that received token matches the retrieved DB token
-    if rest_authenticate!(params[:token], params[:UUID])
-      
-      # Create response JSON
-      response[:users] = rest_get_users_JSON(false)
-      response[:success] = true
-
-      return response.to_json # Return successful JSON response with list of helpers
-     end
-
-    response[:error] = "Invalid token"
-    return response.to_json # Return JSON response with Invalid token error
+    return response.to_json # Return successful JSON response with list of helpers
   end
-
+  
   response[:error] = "Missing parameter(s)"
   return response.to_json # Return JSON response with Missing parameters error
 end
 
-post "/api/get_VIP" do
+post "/api/get_VIP", :provides => 'json' do
+  content_type :json
   response = {:success => false, :users => '[]', :error => ''} # JSON response
 
   # Check that token and UUID were passed
-  if params[:token] && params[:UUID]
+  if params[:UUID]
     
     # Check that the token is valid
-    if rest_authenticate!(params[:token], params[:UUID])
+    if rest_authenticate!(session[:token], params[:UUID])
       
       # Create Response JSON
       response[:users] = rest_get_users_JSON(true)
@@ -202,13 +224,14 @@ post "/api/get_VIP" do
   return response.to_json # Return JSON Response with Missing parameter(s) error
 end
 
-post "/api/set_status" do
+post "/api/set_status", :provides => 'json' do
+  content_type :json
   response = {:success => false, :status => 0, :error => ''} # JSON Response
 
   #check that the token, the UUID, and the userid were passed
-  if params[:token] && params[:UUID] && params[:status]
+  if params[:UUID] && params[:status]
 
-    token = Tokens.first(:user_key => params[:token], :UUID => params[:UUID])
+    token = Tokens.first(:user_key => session[:token], :UUID => params[:UUID])
 
     # If the token exists...
     if token != nil
@@ -221,7 +244,7 @@ post "/api/set_status" do
       end
 
       #check that the token is valid
-      if rest_authenticate!(params[:token], params[:UUID])
+      if rest_authenticate!(session[:token], params[:UUID])
 
         #set the status of the user
         u = OnlineStatus.first(:user_id => token.user_id)
@@ -249,6 +272,17 @@ post "/api/set_status" do
   response[:status] = -1
   response[:error] = "Invalid parameters"
   return response.to_json
+end
+
+post "/api/add_favorites", :provides => 'json' do
+  content_type :json
+  response = {:success => false, :error => ''};
+  if params[:UUID] && params[:username]
+    print "TEMP: I now declare you friends...\n"
+  else
+    response[:error] = 'Missing arguments!'
+    return response.to_json
+  end
 end
 
 # -----------
@@ -308,7 +342,7 @@ get "/dashboard" do
   #if their online status is 2, then push
   #user into the finalOnlineUsers array
   @allUsers.each do |x|
-    user = OnlineStatus.first(:userid => x.id)
+    user = OnlineStatus.first(:user_id => x.id)
     if user != nil
       if user.status == 2
         @finalOnlineUsers.push(x)
@@ -321,72 +355,74 @@ end
 # ----------------
 # Helper Functions
 # ----------------
-def current_user
-  if(session[:user_name])
-    @u ||= User.first(user_name: session[:user_name])
-    return @u
-  else
-    return nil
-  end
-end
-
-def authenticate!
-  if !current_user || !current_user.administrator
-    redirect "/"
-  end
-end
-
-def rest_authenticate!(token, user_UUID)
-  t = Tokens.first(:UUID => user_UUID, :user_key => token) # Get the corresponding token
-
-  # Check that the token exists and matches the corresponding token
-  if t && t.user_key == params[:token]
-    return true # Token exists, return true
-  end
-
-  false # Token doesn't exist, return false
-end
-
-def rest_get_users_JSON(getVIP)
-  u_js = [] # JS array to return
-
-  if getVIP
-    users = User.all(:helper => false, :administrator => false) # Gather all VIPs, ignore admin
-  else
-    users = User.all(:helper => true, :administrator => false) # Gather all Helpers, ignore admin
-  end
-  
-  # Create array containing all VIPs or all Helpers
-  users.each do |u|
-    u_js.push(u.user_name)
-  end
-
-  # Create JSON array and return it
-  u_js.to_json
-end
-
-def rest_get_friends_JSON(userID, isHelper)
-  f_js = []
-  f_id = []
-
-  if isHelper
-    friends = Friends.all(:helper_id => userID)
-
-    friends.each do |f|
-      f_id.push(f.vip_id)
-    end
-  else
-    friends = Friends.all(:vip_id => userID)
-
-    friends.each do |f|
-      f_id.push(f.helper_id)
+helpers do 
+  def current_user
+    if(session[:user_name])
+      @u ||= User.first(user_name: session[:user_name])
+      return @u
+    else
+      return nil
     end
   end
 
-  f_id.each do |id|
-    u = User.get(id)
-    f_js.push(u.user_name)
+  def authenticate!
+    if !current_user || !current_user.administrator
+      redirect "/"
+    end
   end
 
-  return f_js.to_json
+  def rest_authenticate!(token, userUUID)
+    t = Tokens.first(:UUID => userUUID, :user_key => token) # Get the corresponding token
+
+    # Check that the token exists and matches the corresponding token
+    if t
+      return true # Token exists, return true
+    end
+
+    false # Token doesn't exist, return false
+  end
+
+  def rest_get_users_JSON(getVIP)
+    u_js = [] # JS array to return
+
+    if getVIP
+      users = User.all(:helper => false, :administrator => false) # Gather all VIPs, ignore admin
+    else
+      users = User.all(:helper => true, :administrator => false) # Gather all Helpers, ignore admin
+    end
+    
+    # Create array containing all VIPs or all Helpers
+    users.each do |u|
+      u_js.push(u.user_name)
+    end
+
+    # Create JSON array and return it
+    u_js.to_json
+  end
+
+  def rest_get_friends_JSON(userID, isHelper)
+    f_js = []
+    f_id = []
+
+    if isHelper
+      friends = Friends.all(:helper_id => userID)
+
+      friends.each do |f|
+        f_id.push(f.vip_id)
+      end
+    else
+      friends = Friends.all(:vip_id => userID)
+
+      friends.each do |f|
+        f_id.push(f.helper_id)
+      end
+    end
+
+    f_id.each do |id|
+      u = User.get(id)
+      f_js.push(u.user_name)
+    end
+
+    return f_js.to_json
+  end
 end
